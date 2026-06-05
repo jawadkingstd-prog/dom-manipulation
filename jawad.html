@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ShahSolutions — Secure Authentication</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --bg: #0d0f14;
+      --surface: #151820;
+      --surface2: #1c2030;
+      --border: #252a3a;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --accent3: #43e97b;
+      --text: #e8eaf0;
+      --text-muted: #7a809a;
+      --error: #ff5470;
+      --success: #43e97b;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background noise texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+     /* background-image: url("https://i.pinimg.com/736x/1b/53/15/1b531504881c7221f41a2e869ee99fb9.jpg");*/
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Animated gradient orbs */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      animation: floatOrb 18s var(--ease-out) infinite alternate;
+    }
+    .orb-1 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, var(--accent), transparent 70%);
+      top: -120px; left: -80px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, var(--accent2), transparent 70%);
+      bottom: 10%; right: -100px;
+      animation-delay: -6s;
+      animation-duration: 22s;
+    }
+    .orb-3 {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, var(--accent3), transparent 70%);
+      top: 45%; left: 30%;
+      animation-delay: -12s;
+      animation-duration: 16s;
+      opacity: 0.2;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, -30px) scale(1.08); }
+      100% { transform: translate(-30px, 40px) scale(0.95); }
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ===== NAVBAR ===== */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,15,20,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 5%;
+      animation: slideDown 0.6s var(--ease-out);
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s var(--ease-out);
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 0.45rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600 !important;
+    }
+    .nav-cta::after { display: none !important; }
+    .nav-cta:hover { background: #5a52e8; color: #fff !important; transform: translateY(-1px); }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile menu */
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.35s ease;
+    }
+    .mobile-menu.open { max-height: 360px; }
+    .mobile-menu a {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 1rem 5%;
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, transform 0.2s;
+    }
+    .mobile-menu a:hover { color: var(--text); background: var(--surface2); transform: translateX(6px); }
+
+    /* ===== HERO SECTION ===== */
+   
+  .hero { 
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 80px 5% 60px;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+.hero-video-bg {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(270deg) scale(0.7);
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: 0;
+  object-fit: cover;
+  opacity: 0.45;
+}
+
+.hero > *:not(.hero-video-bg) {
+  position: relative;
+  z-index: 1;
+animation: fadeUp 0.8s var(--ease-out) 0.1s both;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 1.2rem;
+      animation: fadeUp 0.8s var(--ease-out) 0.25s both;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200% auto;
+      animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 520px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+      animation: fadeUp 0.8s var(--ease-out) 0.4s both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== AUTH TABS ===== */
+    .auth-section {
+      position: relative;
+      z-index: 1;
+      padding: 20px 5% 80px;
+    }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      box-shadow: var(--shadow), 0 0 0 1px rgba(108,99,255,0.08);
+      overflow: hidden;
+      transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
+    }
+    .auth-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow), 0 0 40px rgba(108,99,255,0.12);
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 1rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-tab::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transition: transform 0.3s var(--ease-out);
+    }
+    .auth-tab.active { color: var(--text); background: var(--surface2); }
+    .auth-tab.active::after { transform: scaleX(1); }
+
+    /* ===== FORM STYLES ===== */
+    .auth-form {
+      display: none;
+      padding: 2rem;
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    .auth-form.active {
+      display: block;
+      animation: formSlideIn 0.4s var(--ease-out) forwards;
+    }
+    @keyframes formSlideIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.3px;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      outline: none;
+    }
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+      transform: translateY(-1px);
+    }
+    .input-wrap input.error { border-color: var(--error); animation: shake 0.4s ease; }
+    .input-wrap input.success-field { border-color: var(--success); }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px;
+      transition: transform 0.2s;
+    }
+    .toggle-pw:hover { color: var(--text); transform: translateY(-50%) scale(1.15); }
+    .field-error {
+      font-size: 0.78rem;
+      color: var(--error);
+      margin-top: 0.35rem;
+      display: none;
+    }
+    .field-error.show { display: block; animation: fadeIn 0.2s; }
+
+    /* Password strength bar */
+    .pw-strength { margin-top: 0.5rem; display: none; }
+    .pw-strength.show { display: block; animation: fadeIn 0.3s; }
+    .pw-bar {
+      height: 4px;
+      border-radius: 4px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .pw-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s var(--ease-out), background 0.3s;
+      width: 0%;
+    }
+    .pw-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      background-size: 200% auto;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s, background-position 0.4s;
+      margin-top: 0.5rem;
+      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .btn-submit:hover {
+      opacity: 0.95;
+      transform: translateY(-2px);
+      background-position: right center;
+    }
+    .btn-submit:hover::after { transform: translateX(100%); }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Success message */
+    .success-msg {
+      display: none;
+      background: rgba(67,233,123,0.1);
+      border: 1px solid rgba(67,233,123,0.3);
+      border-radius: 10px;
+      color: var(--success);
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .success-msg.show { display: block; animation: successPop 0.5s var(--ease-out); }
+    @keyframes successPop {
+      0% { opacity: 0; transform: scale(0.9); }
+      60% { transform: scale(1.02); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Divider */
+    .form-footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .form-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .form-footer a:hover { text-decoration: underline; }
+
+    /* ===== ABOUT SECTION ===== */
+    .about-section {
+      position: relative;
+      z-index: 1;
+      padding: 80px 5%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      margin-bottom: 4rem;
+    }
+    .about-content p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+    .about-content p:last-of-type { margin-bottom: 1.5rem; }
+    .about-highlights {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .about-tag {
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.3);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: 100px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .about-tag:hover {
+      transform: translateY(-2px);
+      background: rgba(108,99,255,0.2);
+    }
+    .about-visual {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      overflow: hidden;
+    }
+    .about-visual::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -50%;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(108,99,255,0.15), transparent 60%);
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .about-visual-inner { position: relative; z-index: 1; }
+    .about-visual h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+    }
+    .about-mission-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .about-mission-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      transition: transform 0.3s var(--ease-out);
+    }
+    .about-mission-list li:hover { transform: translateX(6px); color: var(--text); }
+    .mission-icon {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      transition: transform 0.3s var(--ease-out), border-color 0.3s, box-shadow 0.3s;
+    }
+    .stat-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(108,99,255,0.4);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+    .stat-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.35rem;
+    }
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 460px;
+      width: 100%;
+      position: relative;
+      transform: translateY(30px) scale(0.94);
+      transition: transform 0.4s var(--ease-out);
+      box-shadow: var(--shadow);
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      animation: wave 1.5s ease-in-out infinite;
+      display: inline-block;
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(20deg); }
+      75% { transform: rotate(-10deg); }
+    }
+    .modal h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .modal p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin-bottom: 1.25rem;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .modal-close:hover { color: var(--text); transform: rotate(90deg); }
+    .modal-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .modal-btn:hover { opacity: 0.85; transform: translateX(4px); }
+
+    /* ===== FEATURES SECTION ===== */
+    .section {
+      position: relative;
+      z-index: 1;
+      padding: 60px 5%;
+    }
+    .section-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 500px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ===== FAQ ACCORDION ===== */
+    .faq-section {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 60px 5%;
+      position: relative;
+      z-index: 1;
+    }
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      background: var(--surface);
+      transition: border-color 0.3s, transform 0.3s var(--ease-out);
+    }
+    .faq-item:hover { transform: translateX(4px); }
+    .faq-item.open { border-color: var(--accent); }
+    .faq-question {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.1rem 1.25rem;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      gap: 1rem;
+    }
+    .faq-icon {
+      flex-shrink: 0;
+      width: 24px; height: 24px;
+      background: var(--surface2);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      transition: transform 0.4s var(--ease-out), background 0.2s;
+      color: var(--accent);
+    }
+    .faq-item.open .faq-icon { transform: rotate(45deg); background: var(--accent); color: #fff; }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.45s var(--ease-out), padding 0.3s;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+    .faq-answer-inner { padding: 0 1.25rem 1.25rem; }
+    .faq-item.open .faq-answer { max-height: 220px; }
+
+    /* ===== TESTIMONIALS ===== */
+    .testimonials-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 5%;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .slider-wrap {
+      position: relative;
+      overflow: hidden;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .slider-track {
+      display: flex;
+      transition: transform 0.6s var(--ease-out);
+    }
+    .testimonial-card {
+      min-width: 100%;
+      padding: 0 0.5rem;
+    }
+    .testimonial-inner {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+    }
+    .testimonial-inner:hover {
+      transform: scale(1.01);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .testimonial-stars {
+      color: #f5a623;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      letter-spacing: 2px;
+    }
+    .testimonial-text {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+      font-style: italic;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: transform 0.3s var(--ease-out);
+    }
+    .testimonial-inner:hover .avatar { transform: scale(1.1); }
+    .author-name { font-weight: 600; font-size: 0.9rem; }
+    .author-role { font-size: 0.8rem; color: var(--text-muted); }
+
+    .slider-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .slider-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .slider-btn:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.08); }
+    .slider-dots { display: flex; gap: 6px; }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .dot.active { background: var(--accent); transform: scale(1.3); }
+
+    /* ===== FOOTER ===== */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2rem 5%;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    footer span { color: var(--accent); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .mobile-menu { display: flex; }
+      .hero { padding: 50px 5% 40px; }
+      .auth-form { padding: 1.5rem; }
+      .modal { padding: 1.5rem; }
+      .faq-section { padding: 40px 5%; }
+      .about-section { padding: 60px 5%; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop class="hero-video-bg" aria-hidden="true">
+    <source src="bg..mp4" type="video/mp4">
+    </video>
+
+    
+    
+
+  <!-- Background orbs -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav>
+    <div class="nav-inner">
+      <div class="logo">ShahSolution</div>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#auth">Get Started</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+        <li><a href="#auth" class="nav-cta">Sign Up Free</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#about">About</a>
+    <a href="#auth">Get Started</a>
+    <a href="#faq">FAQ</a>
+    <a href="#testimonials">Reviews</a>
+    <a href="#auth">Sign Up Free</a>
+  </div>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    
+      Your browser does not support the video tag.
+    <div class="hero-badge">🔐 Secure &amp; Fast Authentication</div>
+    <h1>Your account,<br/><span>locked &amp; loaded.</span></h1>
+    <p>Create a secure account in seconds. Industry-grade validation, zero friction. Built for the modern web.</p>
+  </section>
+
+  <!-- ===== AUTH SECTION ===== -->
+  <section class="auth-section reveal" id="auth">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('register')">Create Account</button>
+        <button class="auth-tab" onclick="switchTab('login')">Sign In</button>
+      </div>
+
+      <!-- REGISTRATION FORM -->
+      <form class="auth-form active" id="registerForm" novalidate>
+        <div class="form-group">
+          <label for="reg-name">Full Name</label>
+          <div class="input-wrap">
+            <input type="text" id="reg-name" placeholder="Ali Hassan" autocomplete="name"/>
+          </div>
+          <div class="field-error" id="err-name">Name must be at least 3 characters (letters only).</div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email">Email Address</label>
+          <div class="input-wrap">
+            <input type="email" id="reg-email" placeholder="ali@example.com" autocomplete="email"/>
+          </div>
+          <div class="field-error" id="err-email">Please enter a valid email address.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="reg-password" placeholder="Create strong password" autocomplete="new-password"/>
+            <button type="button" class="toggle-pw" onclick="togglePw('reg-password', this)" aria-label="Toggle password">👁</button>
+          </div>
+          <div class="field-error" id="err-password">Min 8 chars, 1 uppercase, 1 lowercase, 1 number.</div>
+          <div class="pw-strength" id="pwStrength">
+            <div class="pw-bar"><div class="pw-bar-fill" id="pwBarFill"></div></div>
+            <div class="pw-label" id="pwLabel">Strength: —</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-confirm">Confirm Password</label>
+          <div class="input-wrap">
+            <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password"/>
+            <button type="button" class="toggle-pw" onclick="togglePw('reg-confirm', this)" aria-label="Toggle password">👁</button>
+          </div>
+          <div class="field-error" id="err-confirm">Passwords do not match.</div>
+        </div>
+
+        <button type="submit" class="btn-submit">Create Account →</button>
+        <div class="success-msg" id="reg-success">🎉 Account created successfully! Welcome aboard!</div>
+        <p class="form-footer">Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign In</a></p>
+      </form>
+
+      <!-- LOGIN FORM -->
+      <form class="auth-form" id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="log-email">Email Address</label>
+          <div class="input-wrap">
+            <input type="email" id="log-email" placeholder="ali@example.com" autocomplete="email"/>
+          </div>
+          <div class="field-error" id="err-log-email">Please enter a valid email address.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="log-password">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="log-password" placeholder="Your password" autocomplete="current-password"/>
+            <button type="button" class="toggle-pw" onclick="togglePw('log-password', this)" aria-label="Toggle password">👁</button>
+          </div>
+          <div class="field-error" id="err-log-password">Password must be at least 8 characters.</div>
+        </div>
+
+        <button type="submit" class="btn-submit">Sign In →</button>
+        <div class="success-msg" id="log-success">✅ Login successful! Redirecting...</div>
+        <p class="form-footer">Don't have an account? <a href="#" onclick="switchTab('register'); return false;">Create one</a></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT SECTION ===== -->
+  <section class="about-section" id="about">
+    <div class="section-label reveal">Who We Are</div>
+    <div class="section-title reveal reveal-delay-1">About shahSolutions</div>
+    <div class="section-sub reveal reveal-delay-2">We believe authentication should be invisible when it works — and crystal clear when it doesn't.</div>
+
+    <div class="about-grid">
+      <div class="about-content reveal reveal-delay-1">
+        <p>ShahSolutions was founded in 2024 with a simple mission: make secure sign-up and login feel effortless for everyone. We combine real-time client-side validation, thoughtful UX, and security best practices so users never hit a dead end.</p>
+        <p>Whether you're building a side project or scaling a product to millions of users, ShahSolutions   gives you a polished authentication experience out of the box — no backend required for prototyping, and fully extensible when you're ready to go live.</p>
+        <div class="about-highlights">
+          <span class="about-tag">🔒 Zero plain-text storage</span>
+          <span class="about-tag">⚡ Instant validation</span>
+          <span class="about-tag">📱 Mobile-first design</span>
+          <span class="about-tag">🌍 Open &amp; accessible</span>
+        </div>
+      </div>
+
+      <div class="about-visual reveal reveal-delay-2">
+        <div class="about-visual-inner">
+          <h3>Our Core Values</h3>
+          <ul class="about-mission-list">
+            <li>
+              <span class="mission-icon">🛡️</span>
+              <span><strong>Security first</strong> — Every password is hashed. Every connection is encrypted. Privacy is non-negotiable.</span>
+            </li>
+            <li>
+              <span class="mission-icon">✨</span>
+              <span><strong>Delightful UX</strong> — Clear feedback, smooth animations, and zero confusing error states.</span>
+            </li>
+            <li>
+              <span class="mission-icon">🚀</span>
+              <span><strong>Built for speed</strong> — Lightweight, no bloat. Sign up in under 30 seconds on any device.</span>
+            </li>
+            <li>
+              <span class="mission-icon">🤝</span>
+              <span><strong>Developer friendly</strong> — Clean code, easy to customize, and ready to integrate with any stack.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card reveal reveal-delay-1">
+        <div class="stat-number" data-target="50000">0</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-2">
+        <div class="stat-number" data-target="99">0</div>
+        <div class="stat-label">Uptime %</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-3">
+        <div class="stat-number" data-target="120">0</div>
+        <div class="stat-label">Countries Served</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-4">
+        <div class="stat-number" data-target="4">0</div>
+        <div class="stat-label">Avg. Rating ★</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ SECTION ===== -->
+  <section class="faq-section" id="faq">
+    <div class="section-label reveal">Got Questions?</div>
+    <div class="section-title reveal reveal-delay-1">Frequently Asked</div>
+    <div class="section-sub reveal reveal-delay-2">Everything you need to know about using AuthFlow.</div>
+
+    <div class="faq-item reveal">
+      <button class="faq-question" onclick="toggleFAQ(this)">
+        Is my data stored securely?
+        <div class="faq-icon">+</div>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Yes. All passwords are hashed using industry-standard algorithms. We never store plain-text passwords and use encrypted connections (HTTPS) for all data in transit.</div></div>
+    </div>
+
+    <div class="faq-item reveal reveal-delay-1">
+      <button class="faq-question" onclick="toggleFAQ(this)">
+        Can I reset my password if I forget it?
+        <div class="faq-icon">+</div>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Absolutely! Use the "Forgot Password" link on the login page. We'll send a secure reset link to your registered email address valid for 30 minutes.</div></div>
+    </div>
+
+    <div class="faq-item reveal reveal-delay-2">
+      <button class="faq-question" onclick="toggleFAQ(this)">
+        Why does my password need uppercase and numbers?
+        <div class="faq-icon">+</div>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Strong passwords protect you from brute-force attacks. A mix of characters exponentially increases the time it would take a computer to crack your password.</div></div>
+    </div>
+
+    <div class="faq-item reveal reveal-delay-3">
+      <button class="faq-question" onclick="toggleFAQ(this)">
+        Is AuthFlow free to use?
+        <div class="faq-icon">+</div>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Yes! ShahSolutions is completely free for personal use. We offer premium plans with advanced features like multi-factor authentication and team management.</div></div>
+    </div>
+
+    <div class="faq-item reveal reveal-delay-4">
+      <button class="faq-question" onclick="toggleFAQ(this)">
+        Which browsers are supported?
+        <div class="faq-icon">+</div>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">ShahSolutions works on all modern browsers: Chrome, Firefox, Safari, Edge, and mobile browsers. We recommend keeping your browser updated for the best experience.</div></div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section class="testimonials-section" id="testimonials">
+    <div style="max-width:700px;margin:0 auto;">
+      <div class="section-label reveal" style="text-align:center">Loved by users</div>
+      <div class="section-title reveal reveal-delay-1" style="text-align:center">What people say</div>
+    </div>
+
+    <div class="slider-wrap reveal reveal-delay-2">
+      <div class="slider-track" id="sliderTrack">
+
+        <div class="testimonial-card">
+          <div class="testimonial-inner">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"The validation feedback is incredibly helpful. I knew exactly what to fix before submitting. Best auth experience I've had on any platform."</p>
+            <div class="testimonial-author">
+              <div class="avatar" style="background:linear-gradient(135deg,#6c63ff,#8b5cf6);color:#fff;">SA</div>
+              <div>
+                <div class="author-name">Sarah Ahmed</div>
+                <div class="author-role">Product Designer, Karachi</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-inner">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"Clean, fast, and secure. The password strength indicator taught me to create better passwords. Signed up in under 30 seconds!"</p>
+            <div class="testimonial-author">
+              <div class="avatar" style="background:linear-gradient(135deg,#ff6584,#ff8fab);color:#fff;">MK</div>
+              <div>
+                <div class="author-name">Muhammad Khan</div>
+                <div class="author-role">Software Engineer, Lahore</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-inner">
+            <div class="testimonial-stars">★★★★☆</div>
+            <p class="testimonial-text">"Responsive on my phone and laptop. The mobile menu works perfectly. Finally an auth page that doesn't look broken on small screens."</p>
+            <div class="testimonial-author">
+              <div class="avatar" style="background:linear-gradient(135deg,#43e97b,#38f9d7);color:#0d0f14;">ZF</div>
+              <div>
+                <div class="author-name">Zara Farooq</div>
+                <div class="author-role">Freelancer, Islamabad</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="slider-controls reveal reveal-delay-3">
+      <button class="slider-btn" onclick="slide(-1)" aria-label="Previous testimonial">←</button>
+      <div class="slider-dots" id="sliderDots"></div>
+      <button class="slider-btn" onclick="slide(1)" aria-label="Next testimonial">→</button>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <p>Built with <span>♥</span> for the web · AuthFlow &copy; 2025 · All rights reserved.</p>
+  </footer>
+
+  <!-- ===== WELCOME MODAL ===== -->
+  <div class="modal-overlay" id="welcomeModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      <div class="modal-icon">👋</div>
+      <h2>ShahSolutions!</h2>
+      <p>We're thrilled to have you here. This platform uses <strong>client-side validation</strong> to help you create a secure account. Your data is never sent until everything checks out.</p>
+      <p>Review our <a href="#" style="color:var(--accent)">Terms &amp; Conditions</a> before registering. By signing up, you agree to our privacy policy.</p>
+      <button class="modal-btn" onclick="closeModal()">Got it, let's go! →</button>
+    </div>
+  </div>
+
+
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    // ============================
+    // SCROLL REVEAL
+    // ============================
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ============================
+    // ANIMATED COUNTERS (About stats)
+    // ============================
+    function animateCounter(el) {
+      const target = parseFloat(el.dataset.target);
+      const isDecimal = target % 1 !== 0;
+      const duration = 1800;
+      const start = performance.now();
+
+      function update(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = target * eased;
+        el.textContent = isDecimal ? current.toFixed(1) : Math.floor(current).toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
+        else el.textContent = isDecimal ? target.toFixed(1) : target.toLocaleString();
+      }
+      requestAnimationFrame(update);
+    }
+
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('.stat-number').forEach(animateCounter);
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const statsRow = document.querySelector('.stats-row');
+    if (statsRow) statsObserver.observe(statsRow);
+
+    // ============================
+    // MOBILE NAV TOGGLE
+    // ============================
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      mobileMenu.classList.toggle('open');
+    });
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        mobileMenu.classList.remove('open');
+      });
+    });
+
+    // ============================
+    // WELCOME MODAL
+    // ============================
+    setTimeout(() => {
+      document.getElementById('welcomeModal').classList.add('open');
+    }, 1000);
+
+    function closeModal() {
+      document.getElementById('welcomeModal').classList.remove('open');
+    }
+
+    document.getElementById('welcomeModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ============================
+    // TAB SWITCHING (Login / Register)
+    // ============================
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((btn, i) => {
+        btn.classList.toggle('active', (tab === 'register' && i === 0) || (tab === 'login' && i === 1));
+      });
+
+      const regForm = document.getElementById('registerForm');
+      const logForm = document.getElementById('loginForm');
+      regForm.classList.toggle('active', tab === 'register');
+      logForm.classList.toggle('active', tab === 'login');
+
+      // Re-trigger form animation
+      const activeForm = tab === 'register' ? regForm : logForm;
+      activeForm.style.animation = 'none';
+      activeForm.offsetHeight;
+      activeForm.style.animation = '';
+    }
+
+    // ============================
+    // PASSWORD VISIBILITY TOGGLE
+    // ============================
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+
+    // ============================
+    // VALIDATION HELPERS
+    // ============================
+    function showError(fieldId, errId) {
+      const field = document.getElementById(fieldId);
+      const err = document.getElementById(errId);
+      field.classList.add('error');
+      field.classList.remove('success-field');
+      err.classList.add('show');
+    }
+
+    function clearError(fieldId, errId) {
+      const field = document.getElementById(fieldId);
+      const err = document.getElementById(errId);
+      field.classList.remove('error');
+      field.classList.add('success-field');
+      err.classList.remove('show');
+    }
+
+    const nameRegex = /^[a-zA-Z\s]{3,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+    // ============================
+    // PASSWORD STRENGTH METER
+    // ============================
+    document.getElementById('reg-password').addEventListener('input', function() {
+      const val = this.value;
+      const strengthEl = document.getElementById('pwStrength');
+      const bar = document.getElementById('pwBarFill');
+      const label = document.getElementById('pwLabel');
+
+      if (val.length === 0) {
+        strengthEl.classList.remove('show');
+        return;
+      }
+      strengthEl.classList.add('show');
+
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[a-z]/.test(val)) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/\d/.test(val)) score++;
+      if (/[^a-zA-Z0-9]/.test(val)) score++;
+
+      const levels = [
+        { pct: '20%', color: '#ff5470', text: 'Weak' },
+        { pct: '40%', color: '#ff8c42', text: 'Fair' },
+        { pct: '60%', color: '#f5a623', text: 'Moderate' },
+        { pct: '80%', color: '#43e97b', text: 'Strong' },
+        { pct: '100%', color: '#38f9d7', text: 'Very Strong' },
+      ];
+      const level = levels[Math.min(score - 1, 4)] || levels[0];
+      bar.style.width = level.pct;
+      bar.style.background = level.color;
+      label.textContent = 'Strength: ' + level.text;
+    });
+
+    // ============================
+    // REGISTRATION FORM VALIDATION
+    // ============================
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      let valid = true;
+
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-confirm').value;
+
+      if (!nameRegex.test(name)) {
+        showError('reg-name', 'err-name');
+        valid = false;
+      } else {
+        clearError('reg-name', 'err-name');
+      }
+
+      if (!emailRegex.test(email)) {
+        showError('reg-email', 'err-email');
+        valid = false;
+      } else {
+        clearError('reg-email', 'err-email');
+      }
+
+      if (!passwordRegex.test(password)) {
+        showError('reg-password', 'err-password');
+        valid = false;
+      } else {
+        clearError('reg-password', 'err-password');
+      }
+
+      if (password !== confirm || confirm === '') {
+        showError('reg-confirm', 'err-confirm');
+        valid = false;
+      } else {
+        clearError('reg-confirm', 'err-confirm');
+      }
+
+      if (valid) {
+        const successEl = document.getElementById('reg-success');
+        successEl.classList.add('show');
+        this.reset();
+        document.getElementById('pwStrength').classList.remove('show');
+        ['reg-name','reg-email','reg-password','reg-confirm'].forEach(id => {
+          document.getElementById(id).classList.remove('success-field');
+        });
+        setTimeout(() => successEl.classList.remove('show'), 4000);
+      }
+    });
+
+    // ============================
+    // LOGIN FORM VALIDATION
+    // ============================
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      let valid = true;
+
+      const email = document.getElementById('log-email').value.trim();
+      const password = document.getElementById('log-password').value;
+
+      if (!emailRegex.test(email)) {
+        showError('log-email', 'err-log-email');
+        valid = false;
+      } else {
+        clearError('log-email', 'err-log-email');
+      }
+
+      if (password.length < 8) {
+        showError('log-password', 'err-log-password');
+        valid = false;
+      } else {
+        clearError('log-password', 'err-log-password');
+      }
+
+      if (valid) {
+        const successEl = document.getElementById('log-success');
+        successEl.classList.add('show');
+        this.reset();
+        ['log-email','log-password'].forEach(id => {
+          document.getElementById(id).classList.remove('success-field');
+        });
+        setTimeout(() => successEl.classList.remove('show'), 4000);
+      }
+    });
+
+    // ============================
+    // FAQ ACCORDION
+    // ============================
+    function toggleFAQ(btn) {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+
+      if (!isOpen) item.classList.add('open');
+    }
+
+    // ============================
+    // TESTIMONIAL SLIDER
+    // ============================
+    const totalSlides = 3;
+    let currentSlide = 0;
+    let autoSlideTimer;
+
+    const dotsContainer = document.getElementById('sliderDots');
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    function goToSlide(index) {
+      currentSlide = (index + totalSlides) % totalSlides;
+      document.getElementById('sliderTrack').style.transform = `translateX(-${currentSlide * 100}%)`;
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    }
+
+    function slide(dir) {
+      goToSlide(currentSlide + dir);
+      resetAutoSlide();
+    }
+
+    function resetAutoSlide() {
+      clearInterval(autoSlideTimer);
+      autoSlideTimer = setInterval(() => slide(1), 5000);
+    }
+
+    resetAutoSlide();
+  </script>
+</body>
+</html>
